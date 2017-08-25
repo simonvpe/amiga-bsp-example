@@ -3,13 +3,21 @@
 #include <stdexcept>
 
 enum class Access : uint8_t { R, W, S };
+enum class Width  : uint8_t { B, W, L };
 
+/*
+  This type encodes register information. In order to be able
+  to pass it as non-type template arguments it needs to be
+  serializable. To achieve this the address, width and access
+  is packed into an uint32_t. To make this serialization transparent
+  to the user there is also an implicit type cast into an uint32_t.
+ */
 struct reg {
-  constexpr reg(uint16_t address, uint8_t width, Access access)
+  constexpr reg(uint16_t address, Width width, Access access)
   : data {
     uint32_t{0} 
     | (uint32_t{address} & 0xffff) 
-    | (uint32_t{width} << 16) 
+    | ((static_cast<uint32_t>(width)  & 0xff) << 16) 
     | ((static_cast<uint32_t>(access) & 0xff) << 24)
   }
   { }
@@ -21,8 +29,8 @@ struct reg {
   constexpr uint16_t address() const
   { return static_cast<uint16_t>(data & 0xffff); }
 
-  constexpr uint8_t width() const
-  { return static_cast<uint8_t>((data >> 16) & 0xff); }
+  constexpr Width width() const
+  { return static_cast<Width>((data >> 16) & 0xff); }
 
   constexpr Access access() const
   { return static_cast<Access>((data >> 24) & 0xff); }
@@ -32,70 +40,74 @@ struct reg {
   const uint32_t data;
 };
 
-template<uint32_t data>
+/*
+  Reading from registers
+ */
+
+template<uint32_t reg_serialized>
 inline uint8_t read_b() { 
-  constexpr auto r = reg{data};
-  static_assert(r.width() <= 8);
+  constexpr auto r = reg{reg_serialized};
   return *reinterpret_cast<volatile const uint8_t*>(r.address()); 
 }
 
-template<uint32_t data>
+template<uint32_t reg_serialized>
 inline uint16_t read_w() { 
-  constexpr auto r = reg{data};
-  static_assert(r.width() <= 16);
+  constexpr auto r = reg{reg_serialized};
+  static_assert(r.width() == Width::W || r.width() == Width::L);
   return *reinterpret_cast<volatile const uint16_t*>(r.address());
 }
 
-template<uint32_t data>
+template<uint32_t reg_serialized>
 inline uint32_t read_l() {
-  constexpr auto r = reg{data};
-  static_assert(r.width() <= 32);
+  constexpr auto r = reg{reg_serialized};
+  static_assert(r.width() == Width::L);
   return *reinterpret_cast<volatile const uint32_t*>(r.address());
 }
 
-template<uint32_t data>
+template<uint32_t reg_serialized>
 inline void write_b(uint8_t value) {
-  constexpr auto r = reg{data};
-  static_assert(r.width() <= 8);
+  constexpr auto r = reg{reg_serialized};
+  static_assert(r.width() == Width::B || r.width() == Width::W || r.width() == Width::L);
   *reinterpret_cast<volatile uint8_t*>(r.address()) = value;
 }
 
-template<uint32_t data>
+template<uint32_t reg_serialized>
 inline void write_w(uint16_t value) {
-  constexpr auto r = reg{data};
-  static_assert(r.width() <= 16);
+  constexpr auto r = reg{reg_serialized};
+  static_assert(r.width() == Width::W || r.width() == Width::L);
   *reinterpret_cast<volatile uint16_t*>(r.address()) = value;
 }
 
-template<uint32_t data>
+template<uint32_t reg_serialized>
 inline void write_l(uint32_t value) {
-  constexpr auto r = reg{data};
-  static_assert(r.width() <= 32);
+  constexpr auto r = reg{reg_serialized};
+  static_assert(r.width() == Width::L);
   *reinterpret_cast<volatile uint32_t*>(r.address()) = value;
 }
 
-template<int bit, uint32_t data>
+template<int bit, uint32_t reg_serialized>
 constexpr inline bool bit_test() {
-
-  constexpr auto r = reg{data};
+  constexpr auto r = reg{reg_serialized};
 
   static_assert(bit >= 0);
-  static_assert(bit < r.width());
   static_assert(r.access() == Access::R);
-
-  if constexpr( r.width() <= 8 ) {
+  
+  if constexpr(r.width() == Width::B) {
+    static_assert(bit < 8);
     return read_b<r>() & (1 << bit);
   }
-
-  if constexpr( r.width() <= 16 ) {
+  if constexpr(r.width() == Width::W) {
+    static_assert(bit < 16);
     return read_w<r>() & (1 << bit);
   }
-
-  return read_l<r>() & (1 << bit);
+  if constexpr(r.width() == Width::L) {
+    static_assert(bit < 32);
+    return read_l<r>() & (1 << bit);
+  }
 }
 
 auto foo() {
-  constexpr auto r = reg{0xbeef, 8, Access::R};
+  constexpr auto r = reg{0xbeef, Width::W, Access::R};
   write_b<r>(55);
-  return bit_test<7, r>();
+  return bit_test<16, r>();
 }
