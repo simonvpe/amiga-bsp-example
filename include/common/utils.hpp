@@ -47,6 +47,7 @@ struct reg {
 template<uint32_t reg_serialized>
 inline uint8_t read_b() { 
   constexpr auto r = reg{reg_serialized};
+  static_assert(r.width() == Width::B || r.width() == Width::W || r.width() == Width::L);
   return *reinterpret_cast<volatile const uint8_t*>(r.address()); 
 }
 
@@ -107,7 +108,7 @@ constexpr inline bool bit_test() {
 }
 
 auto foo() {
-  constexpr auto r = reg{0xbeef, Width::W, Access::R};
+  constexpr auto r = reg{0xbeef, Width::B, Access::R};
   write_b<r>(55);
-  return bit_test<16, r>();
+  return bit_test<7, r>();
 }
