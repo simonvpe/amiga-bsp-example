@@ -32,23 +32,47 @@ struct reg {
   const uint32_t data;
 };
 
-inline uint8_t read_b(const reg& r)
-{ return *reinterpret_cast<volatile const uint8_t*>(r.address()); }
+template<uint32_t data>
+inline uint8_t read_b() { 
+  constexpr auto r = reg{data};
+  static_assert(r.width() <= 8);
+  return *reinterpret_cast<volatile const uint8_t*>(r.address()); 
+}
 
-inline uint16_t read_w(const reg& r)
-{ return *reinterpret_cast<volatile const uint16_t*>(r.address()); }
+template<uint32_t data>
+inline uint16_t read_w() { 
+  constexpr auto r = reg{data};
+  static_assert(r.width() <= 16);
+  return *reinterpret_cast<volatile const uint16_t*>(r.address());
+}
 
-inline uint32_t read_l(const reg& r)
-{ return *reinterpret_cast<volatile const uint32_t*>(r.address()); }
+template<uint32_t data>
+inline uint32_t read_l() {
+  constexpr auto r = reg{data};
+  static_assert(r.width() <= 32);
+  return *reinterpret_cast<volatile const uint32_t*>(r.address());
+}
 
-inline void write_b(const reg& r, uint8_t value)
-{ *reinterpret_cast<volatile uint8_t*>(r.address()) = value; }
+template<uint32_t data>
+inline void write_b(uint8_t value) {
+  constexpr auto r = reg{data};
+  static_assert(r.width() <= 8);
+  *reinterpret_cast<volatile uint8_t*>(r.address()) = value;
+}
 
-inline void write_w(const reg& r, uint16_t value)
-{ *reinterpret_cast<volatile uint16_t*>(r.address()) = value; }
+template<uint32_t data>
+inline void write_w(uint16_t value) {
+  constexpr auto r = reg{data};
+  static_assert(r.width() <= 16);
+  *reinterpret_cast<volatile uint16_t*>(r.address()) = value;
+}
 
-inline void write_l(const reg& r, uint32_t value)
-{ *reinterpret_cast<volatile uint32_t*>(r.address()) = value; }
+template<uint32_t data>
+inline void write_l(uint32_t value) {
+  constexpr auto r = reg{data};
+  static_assert(r.width() <= 32);
+  *reinterpret_cast<volatile uint32_t*>(r.address()) = value;
+}
 
 template<int bit, uint32_t data>
 constexpr inline bool bit_test() {
@@ -57,21 +81,21 @@ constexpr inline bool bit_test() {
 
   static_assert(bit >= 0);
   static_assert(bit < r.width());
-  static_assert(r.width() <= 32);
   static_assert(r.access() == Access::R);
 
   if constexpr( r.width() <= 8 ) {
-    return read_b(r) & (1 << bit);
+    return read_b<r>() & (1 << bit);
   }
 
   if constexpr( r.width() <= 16 ) {
-    return read_w(r) & (1 << bit);
+    return read_w<r>() & (1 << bit);
   }
 
-  return read_l(r) & (1 << bit);
+  return read_l<r>() & (1 << bit);
 }
 
 auto foo() {
-  constexpr auto r = reg{0xbeef, 16, Access::R};
-  return bit_test<15, r>();
+  constexpr auto r = reg{0xbeef, 8, Access::R};
+  write_b<r>(55);
+  return bit_test<7, r>();
 }
