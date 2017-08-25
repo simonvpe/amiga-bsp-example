@@ -35,7 +35,8 @@ struct reg {
   constexpr Access access() const
   { return static_cast<Access>((data >> 24) & 0xff); }
 
-  constexpr operator uint32_t() const { return data; }
+  constexpr operator uint32_t() const 
+  { return data; }
 
   const uint32_t data;
 };
