@@ -58,11 +58,12 @@ constexpr inline bool bit_test() {
   static_assert(bit >= 0);
   static_assert(bit < r.width());
   static_assert(r.width() <= 32);
+  static_assert(r.access() == Access::R);
 
   if constexpr( r.width() <= 8 ) {
     return read_b(r) & (1 << bit);
   }
-  
+
   if constexpr( r.width() <= 16 ) {
     return read_w(r) & (1 << bit);
   }
@@ -71,6 +72,6 @@ constexpr inline bool bit_test() {
 }
 
 auto foo() {
-  constexpr auto r = reg{0xbeef, 8, Access::R};
-  return bit_test<7, r>();
+  constexpr auto r = reg{0xbeef, 16, Access::R};
+  return bit_test<15, r>();
 }
