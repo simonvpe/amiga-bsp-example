@@ -11,35 +11,31 @@ struct reg {
   , access{access}
   { }
 
-  uint8_t read_b() const
-  { return *reinterpret_cast<volatile const uint8_t*>(address); }
-
-  uint16_t read_w() const
-  { return *reinterpret_cast<volatile const uint16_t*>(address); }
-
-  uint32_t read_l() const
-  { return *reinterpret_cast<volatile const uint32_t*>(address); }
-
-  void write_b(uint8_t value) const
-  { *reinterpret_cast<volatile uint8_t*>(address) = value; }
-
-  void write_w(uint16_t value) const
-  { *reinterpret_cast<volatile uint16_t*>(address) = value; }
-
-  void write_l(uint32_t value) const
-  { *reinterpret_cast<volatile uint32_t*>(address) = value; }
-
-  bool btst_b(int bit) const
-  { return read_b() & (1 << bit); }
-
-  bool btst_w(int bit) const
-  { return read_w() & (1 << bit); }
-
-  bool btst_l(int bit) const
-  { return read_l() & (1 << bit); }
-  
-  
   const std::size_t address;
   const std::size_t width;
   const Access access;
+};
+
+inline uint8_t read_b(const reg& r)
+{ return *reinterpret_cast<volatile const uint8_t*>(r.address); }
+
+inline uint16_t read_w(const reg& r)
+{ return *reinterpret_cast<volatile const uint16_t*>(r.address); }
+
+inline uint32_t read_l(const reg& r)
+{ return *reinterpret_cast<volatile const uint32_t*>(r.address); }
+
+inline void write_b(const reg& r, uint8_t value)
+{ *reinterpret_cast<volatile uint8_t*>(r.address) = value; }
+
+inline void write_w(const reg& r, uint16_t value)
+{ *reinterpret_cast<volatile uint16_t*>(r.address) = value; }
+
+inline void write_l(const reg& r, uint32_t value)
+{ *reinterpret_cast<volatile uint32_t*>(r.address) = value; }
+
+template<int bit>
+constexpr inline bool btst_b(const reg& r)
+{
+  return read_b(r) & bit;
 };
