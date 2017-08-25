@@ -2,7 +2,7 @@ DOCKER   := docker run --user $(shell id -u) --rm -v $(CURDIR):/tmp -w /tmp brow
 CXX      := $(DOCKER) m68k-ataribrowner-elf-g++ -Ttext=0
 LD       := $(DOCKER) m68k-ataribrowner-elf-ld
 OBJDUMP  := $(DOCKER) m68k-ataribrowner-elf-objdump
-HUNKTOOL := hunktool
+HUNKTOOL := $(DOCKER) hunktool
 LDLAGS   :=--gc-sections --emit-relocs -e__start
 CPU      := -m68000
 LIBPATHS := -L/lib/gcc/m68k-ataribrown-elf/6.2.0/m68000 -L/usr/m68k-ataribrowner-elf/lib/m68000

@@ -31,7 +31,7 @@ struct reg {
   { }
 
   constexpr uint32_t address() const
-  { return static_cast<uint16_t>(data & 0xffff); }
+  { return static_cast<uint32_t>(data & 0xffffff); }
 
   constexpr Width width() const
   { return static_cast<Width>((data >> 24) & 0xf); }

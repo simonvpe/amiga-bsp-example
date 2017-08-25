@@ -5,7 +5,9 @@ using cmap::map;
 using cmap::lookup;
 
 int main() {
-  constexpr auto ciaa_pra = lookup(bsp.ciab, CIA::Register::PRA);
-  return bit_test<6, ciaa_pra>();
+  constexpr auto ciaa_pra = lookup(bsp.ciaa, CIA::Register::PRA);
+  while(bit_test<6, ciaa_pra>())
+    ;
+  return 0;
 }
 	   
