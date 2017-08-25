@@ -1,0 +1,306 @@
+#!/usr/bin/env python2
+#
+# ploink: A tool to convert M68K ELF files to Amiga Hunks
+# based on STELF
+# GreaseMonkey, 2015-2016 - Public Domain
+#
+# IMPORTANT: Use --emit-relocs on the linker, not -r!
+#
+# ALSO IMPORTANT: This currently ONLY reads .text, .data, .bss!
+# Merge .rodata into .text in your linker script.
+
+import sys, struct
+
+#
+# LOAD FILE
+#
+
+fp = open(sys.argv[1], "rb")
+
+# ELF Header
+e_ident = fp.read(16)
+if e_ident != "\x7FELF\x01\x02\x01\x00" + "\x00"*8:
+	print repr(e_ident)
+	raise Exception("not a valid SVR4/Linux 32-bit Big-Endian ELF file")
+
+e_type, e_machine, e_version, = struct.unpack(">HHI", fp.read(8))
+#print e_type, e_machine, e_version
+if e_version != 1: raise Exception("unsupported ELF version")
+if e_machine != 4: raise Exception("not an m68k ELF binary")
+
+e_entry, e_phoff, e_shoff, e_flags, = struct.unpack(">IIII", fp.read(16))
+e_ehsize, e_phentsize, e_phnum, e_shentsize, e_shnum, e_shstrndx, = struct.unpack(">HHHHHH", fp.read(12))
+#print "%08X %08X %08X %08X" % (e_entry, e_phoff, e_shoff, e_flags,)
+#print "%04X %04X %04X %04X %04X %04X" % (e_ehsize, e_phentsize, e_phnum, e_shentsize, e_shnum, e_shstrndx,)
+if e_ehsize not in [0x34] or e_phentsize not in [0x20, 0] or e_shentsize not in [0x28]: raise Exception("invalid sizes")
+
+# Section Header
+fp.seek(e_shoff)
+
+shlist = []
+
+for i in xrange(e_shnum):
+	sh = {}
+	sh["name"], sh["type"], sh["flags"], sh["addr"], = struct.unpack(">IIII", fp.read(16))
+	sh["offset"], sh["size"], sh["link"], sh["info"], = struct.unpack(">IIII", fp.read(16))
+	sh["addralign"], sh["entsize"], = struct.unpack(">II", fp.read(8))
+	shlist.append(sh)
+
+# String table
+fp.seek(shlist[e_shstrndx]["offset"])
+shstrtab = fp.read(shlist[e_shstrndx]["size"])
+
+# Handle sections
+progbits = {}
+progbits_offs = {}
+progbits_addr = {}
+nobits = {}
+relas = {}
+symtab = None
+strtab = None
+for i in xrange(e_shnum):
+	sh = shlist[i]
+	shname = shstrtab[sh["name"]:].partition("\x00")[0]
+	print "%i: %i %08X %08X %s" % (i, sh["type"],
+		sh["offset"], sh["size"],
+		repr(shname), )
+	
+	if sh["type"] == 1: # SHT_PROGBITS
+		print "- Loading progbits"
+		fp.seek(sh["offset"])
+		assert sh["type"] not in progbits
+		progbits[shname] = fp.read(sh["size"])
+		progbits_offs[shname] = sh["offset"]
+		progbits_addr[shname] = sh["addr"]
+
+	elif sh["type"] == 2: # SHT_SYMTAB
+		print "- symtab"
+		fp.seek(sh["offset"])
+		assert symtab == None
+		assert sh["size"] % 16 == 0
+		symtab = []
+		for i in xrange(sh["size"]//16):
+			symtab.append(struct.unpack(">IIIBBH", fp.read(16)))
+
+		print symtab
+
+	elif sh["type"] == 4: # SHT_RELA
+		print "- Loading rela"
+		fp.seek(sh["offset"])
+		assert sh["type"] not in relas
+		assert sh["size"] % 12 == 0
+		assert shname.startswith(".rela")
+		shname = shname[5:]
+		relas[shname] = []
+		for i in xrange(sh["size"]//12):
+			ra, rb, rc, = struct.unpack(">III", fp.read(12))
+			relas[shname].append((ra, rb&0xFF, rb>>8, rc))
+
+		print relas[shname]
+
+	elif sh["type"] == 8: # SHT_NOBITS
+		print "- NOBITS"
+		nobits[shname] = sh
+
+print
+
+if ".text" not in relas: relas[".text"] = []
+if ".data" not in relas: relas[".data"] = []
+
+# Align
+while len(progbits[".text"]) % 4 != 0: progbits[".text"] += "\x00"
+while len(progbits[".data"]) % 4 != 0: progbits[".data"] += "\x00"
+while nobits[".bss"]["size"] % 4 != 0: nobits[".bss"]["size"] += 1
+
+# Do relocations
+file_offs = 0
+reloc_addrs = {
+	".text": [[], [], []],
+	".data": [[], [], []],
+}
+
+foffs_real = [
+	0,
+	len(progbits[".text"]),
+	len(progbits[".text"])+len(progbits[".data"]),
+]
+
+foffs_addr = [
+	progbits_addr[".text"],
+	progbits_addr[".data"],
+	nobits[".bss"]["addr"]
+]
+
+foffs_diff = [r-a for r,a in zip(foffs_real, foffs_addr)]
+
+def in_section(name, addr):
+	if name == ".bss":
+		offs = nobits[name]["addr"]
+		slen = nobits[name]["size"]
+	else:
+		offs = progbits_addr[name]
+		slen = len(progbits[name])
+	#print "%08X %08X %08X" % (addr, offs, offs+slen, )
+	if addr < offs: return False
+	if addr > offs+slen: return False
+	return True
+
+for name in [".text", ".data"]:
+	base_offs = progbits_offs[name]
+	base_addr = progbits_addr[name]
+
+	print "Relocating %s from %08X -> %08X:" % (repr(name), base_addr, file_offs)
+
+	for (addr, typ, symidx, offs, ) in relas[name]:
+		symoffs = symtab[symidx][1]
+
+		if typ == 0x01: # R_68K_32
+			
+			reloffs = 0
+			addr -= base_addr
+			#print "R_68K_32 %08X %08X+%08X" % (addr, symoffs, offs)
+			data, = struct.unpack(">I", progbits[name][addr:][:4])
+			afrom = symoffs
+			if in_section(".bss", afrom):
+				reloffs = nobits[".bss"]["addr"]
+				hunk_id = 2
+			elif in_section(".data", afrom):
+				reloffs = progbits_addr[".data"]
+				hunk_id = 1
+			elif in_section(".text", afrom):
+				reloffs = progbits_addr[".text"]
+				hunk_id = 0
+			else:
+				print "%08X" % (afrom, )
+				assert False
+				hunk_id = 3
+			#print "%08X" % (-foffs_diff[hunk_id],)
+			#newloc = (symoffs+offs-base_addr+file_offs) & 0xFFFFFFFF
+			newloc = (symoffs+offs-foffs_addr[hunk_id]) & 0xFFFFFFFF
+			#print "R_68K_32 %08X %08X+%08X (%08X) -> %02X:%08X" % (addr, symoffs, offs, data, hunk_id, newloc)
+			reloc_addrs[name][hunk_id].append(addr+file_offs)
+			assert data == 0 or data == (symoffs + offs) & 0xFFFFFFFF
+			progbits[name] = (progbits[name][:addr]
+				+ struct.pack(">I", newloc)
+				+ progbits[name][addr+4:])
+
+		elif typ == 0x02: # R_68K_16
+			print "R_68K_16 %08X %08X+%08X" % (addr, symoffs, offs)
+			raise Exception("16-bit relocations not supported")
+
+		elif typ == 0x05: # R_68K_PC16
+			# Everything stays nicely aligned, nothing to do here
+			# XXX: ACTUALLY WE DO NEED TO DO SOMETHING
+			data, = struct.unpack(">H", progbits[name][addr - base_addr:][:2])
+			print "R_68K_PC16 %08X %08X+%08X (%08X)" % (addr, symoffs-addr, offs, data)
+			raise Exception("pcrel not supported yet")
+			"""
+			newloc = symoffs+offs-base_addr-(addr-base_addr)+file_offs
+			assert data == 0 or data == newloc
+			progbits[name] = (progbits[name][:addr]
+				+ struct.pack(">H", newloc)
+				+ progbits[name][addr+2:])
+			"""
+
+		else:
+			print typ, symidx, addr, offs
+			assert False
+
+	#file_offs += len(progbits[name])
+	print
+
+print
+
+# Get data
+print ".text: %08X, %08X bytes, %i relocations" % (progbits_offs[".text"], len(progbits[".text"]), len(relas[".text"]), )
+print ".data: %08X, %08X bytes, %i relocations" % (progbits_offs[".data"], len(progbits[".data"]), len(relas[".data"]), )
+print ".bss : %08X, %08X bytes" % (nobits[".bss"]["offset"], nobits[".bss"]["size"], )
+print
+
+# Generate reloc table
+
+print "Generating relocations"
+for k in reloc_addrs:
+	for l in reloc_addrs[k]:
+		l.sort()
+print reloc_addrs
+
+# CLOSE
+fp.close()
+
+#
+# SAVE FILE
+#
+
+print "SAVING!"
+fp = open(sys.argv[2], "wb")
+
+# Hunk header
+fp.write(struct.pack(">IIIII", 0x3F3, 0, 3, 0, 2))
+hunk_len_ptr = fp.tell()
+for i in xrange(3):
+	fp.write(struct.pack(">I", 0))
+
+hunk_lens = []
+def do_hunk(name, data):
+	hunk_len_beg = fp.tell()
+	hunk_len = 1
+	print "hunk: %s" % (repr(name), )
+
+	# Contents block
+	if name == ".text":
+		assert(len(data)%4 == 0)
+		hunk_len = len(data)
+		fp.write(struct.pack(">II", 0x3E9, len(data)>>2))
+	elif name == ".data":
+		assert(len(data)%4 == 0)
+		hunk_len = len(data)
+		fp.write(struct.pack(">II", 0x3EA, len(data)>>2))
+	elif name == ".bss":
+		# data in this case is just a length
+		assert(data%4 == 0)
+		fp.write(struct.pack(">II", 0x3EB, data>>2))
+		hunk_len = data
+	
+	if name != ".bss":
+		fp.write(data)
+
+		# Reloc32 block
+		# FIXME: handle relocs into other sections
+		totreloc = sum([len(l) for l in reloc_addrs[name]])
+		if totreloc > 0:
+			fp.write(struct.pack(">I", 0x3EC))
+			for i in xrange(3):
+				l = reloc_addrs[name][i]
+				if len(l) > 0:
+					fp.write(struct.pack(">II", len(l), i))
+					for addr in l:
+						fp.write(struct.pack(">I", addr))
+
+			fp.write(struct.pack(">I", 0))
+
+	# End hunk
+	fp.write(struct.pack(">I", 0x3F2))
+
+	# Add hunk length to table
+	hunk_len_end = fp.tell()
+	#hunk_len = hunk_len_end - hunk_len_beg
+	assert(hunk_len%4 == 0)
+	hunk_lens.append(hunk_len)
+
+# Do our hunks
+do_hunk(".text", progbits[".text"])
+do_hunk(".data", progbits[".data"])
+do_hunk(".bss", nobits[".bss"]["size"])
+
+# patch it up
+fp.seek(hunk_len_ptr)
+print "hunk lengths:"
+for hunk_len in hunk_lens:
+	assert(hunk_len%4 == 0)
+	print "- %08X" % (hunk_len, )
+	fp.write(struct.pack(">I", hunk_len>>2))
+
+# DONE
+fp.close()
+exit(0)

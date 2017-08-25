@@ -20,8 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 #pragma once
-#include <utility>
-#include <tuple>
+
 #include <stdexcept>
 
 namespace cmap {
@@ -95,8 +94,6 @@ namespace _model {
     as it is copy constructible. That means that you can nest maps and store
     complex types.
   */
-  using std::pair;
-
   template<typename V> struct outcome {
     constexpr outcome(bool s, const V v) : success{s}, value{v} {}
     const bool success;
