@@ -1,6 +1,6 @@
 #pragma once
-#include "cia.hpp"
-#include "chipset.hpp"
+#include "modules/cia.hpp"
+#include "modules/chipset.hpp"
 
 constexpr struct a500_bsp {
   static constexpr auto ciaa = CIA::ciaa;

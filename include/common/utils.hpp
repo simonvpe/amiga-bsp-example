@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstddef>
 #include <inttypes.h>
 #include <stdexcept>
@@ -11,14 +13,16 @@ enum class Width  : uint8_t { B, W, L };
   serializable. To achieve this the address, width and access
   is packed into an uint32_t. To make this serialization transparent
   to the user there is also an implicit type cast into an uint32_t.
+
+  The address is 24 bits, width 4 bits and access 4 bits.
  */
 struct reg {
-  constexpr reg(uint16_t address, Width width, Access access)
+  constexpr reg(uint32_t address, Width width, Access access)
   : data {
     uint32_t{0} 
-    | (uint32_t{address} & 0xffff) 
-    | ((static_cast<uint32_t>(width)  & 0xff) << 16) 
-    | ((static_cast<uint32_t>(access) & 0xff) << 24)
+    | (uint32_t{address} & 0xffffff) 
+    | ((static_cast<uint32_t>(width)  & 0xf) << 24) 
+    | ((static_cast<uint32_t>(access) & 0xf) << 28)
   }
   { }
 
@@ -26,14 +30,14 @@ struct reg {
   : data{data}
   { }
 
-  constexpr uint16_t address() const
+  constexpr uint32_t address() const
   { return static_cast<uint16_t>(data & 0xffff); }
 
   constexpr Width width() const
-  { return static_cast<Width>((data >> 16) & 0xff); }
+  { return static_cast<Width>((data >> 24) & 0xf); }
 
   constexpr Access access() const
-  { return static_cast<Access>((data >> 24) & 0xff); }
+  { return static_cast<Access>((data >> 28) & 0xf); }
 
   constexpr operator uint32_t() const 
   { return data; }
@@ -111,9 +115,4 @@ constexpr inline bool bit_test() {
     static_assert(bit < 32);
     return read_l<r>() & (1 << bit);
   }
-}
-
-auto foo() {
-  constexpr auto r = reg{0xbeef, Width::B, Access::R};
-  return bit_test<7, r>();
 }
