@@ -5,9 +5,9 @@ using cmap::map;
 using cmap::lookup;
 
 int main() {
-  constexpr auto ciaa_pra = lookup(bsp.ciaa, CIA::Register::PRA);
-  constexpr auto chipset_vhposr   = lookup(bsp.chipset, Chipset::Register::VHPOSR);
-  constexpr auto chipset_color00  = lookup(bsp.chipset, Chipset::Register::COLOR00);
+  constexpr auto ciaa_pra         = bsp.ciaa[CIA::Register::PRA];
+  constexpr auto chipset_vhposr   = bsp.chipset[Chipset::Register::VHPOSR];
+  constexpr auto chipset_color00  = bsp.chipset[Chipset::Register::COLOR00];
 
   while(bit_test<6, ciaa_pra>()) {
     while(0xAC != read_b<chipset_vhposr>())

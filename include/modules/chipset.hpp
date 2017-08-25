@@ -6,7 +6,7 @@
 
 namespace Chipset {
   using cmap::map;
-  using cmap::make_map;
+  using cmap::make_lookup;
 
   enum class Register {
     BSTDAT, DMACONR, VPOSR, VHPOSR,
@@ -32,7 +32,7 @@ namespace Chipset {
     COLOR26, COLOR27, COLOR28, COLOR29, COLOR30, COLOR31, BEAMCON0,
   };
 
-  constexpr auto ocs = make_map(
+  constexpr auto ocs = make_lookup(
     map(Register::BSTDAT,  reg{0xDFF000, Width::W, Access::R}), // Blitter dest. early read (dummy address)	
     map(Register::DMACONR, reg{0xDFF002, Width::W, Access::R}), // Dma control (and blitter status) read
     map(Register::VPOSR,   reg{0xDFF004, Width::W, Access::R}), // Read vertical most sig. bits (and frame flop)

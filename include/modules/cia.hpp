@@ -4,14 +4,14 @@
 
 namespace CIA {
   using cmap::map;
-  using cmap::make_map;
+  using cmap::make_lookup;
   
   enum class Register {
     PRA, PRB, DDRA, DDRB, TALO, TALHI, TBLO, TBHI,
     TODLO, TODMID, TODHI, SDR, ICR, CRA, CRB
   };
 
-  constexpr auto ciaa = make_map(
+  constexpr auto ciaa = make_lookup(
       map(Register::PRA,    reg{0xBFE001, Width::B, Access::R}),
       map(Register::PRB,    reg{0xBFE101, Width::B, Access::R}),
       map(Register::DDRA,   reg{0xBFE201, Width::B, Access::R}),
@@ -29,7 +29,7 @@ namespace CIA {
       map(Register::CRB,    reg{0xBFEF01, Width::B, Access::R})
   );
 
-  constexpr auto ciab = make_map(
+  constexpr auto ciab = make_lookup(
       map(Register::PRA,    reg{0xBFD000, Width::B, Access::R}),
       map(Register::PRB,    reg{0xBFD100, Width::B, Access::R}),
       map(Register::DDRA,   reg{0xBFD200, Width::B, Access::R}),
