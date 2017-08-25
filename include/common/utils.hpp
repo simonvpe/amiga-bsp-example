@@ -47,6 +47,7 @@ struct reg {
 template<uint32_t reg_serialized>
 inline uint8_t read_b() { 
   constexpr auto r = reg{reg_serialized};
+  static_assert(r.access() == Access::R);
   static_assert(r.width() == Width::B || r.width() == Width::W || r.width() == Width::L);
   return *reinterpret_cast<volatile const uint8_t*>(r.address()); 
 }
@@ -54,6 +55,7 @@ inline uint8_t read_b() {
 template<uint32_t reg_serialized>
 inline uint16_t read_w() { 
   constexpr auto r = reg{reg_serialized};
+  static_assert(r.access() == Access::R);
   static_assert(r.width() == Width::W || r.width() == Width::L);
   return *reinterpret_cast<volatile const uint16_t*>(r.address());
 }
@@ -61,6 +63,7 @@ inline uint16_t read_w() {
 template<uint32_t reg_serialized>
 inline uint32_t read_l() {
   constexpr auto r = reg{reg_serialized};
+  static_assert(r.access() == Access::R);
   static_assert(r.width() == Width::L);
   return *reinterpret_cast<volatile const uint32_t*>(r.address());
 }
@@ -68,6 +71,7 @@ inline uint32_t read_l() {
 template<uint32_t reg_serialized>
 inline void write_b(uint8_t value) {
   constexpr auto r = reg{reg_serialized};
+  static_assert(r.access() == Access::W);
   static_assert(r.width() == Width::B || r.width() == Width::W || r.width() == Width::L);
   *reinterpret_cast<volatile uint8_t*>(r.address()) = value;
 }
@@ -75,6 +79,7 @@ inline void write_b(uint8_t value) {
 template<uint32_t reg_serialized>
 inline void write_w(uint16_t value) {
   constexpr auto r = reg{reg_serialized};
+  static_assert(r.access() == Access::W);
   static_assert(r.width() == Width::W || r.width() == Width::L);
   *reinterpret_cast<volatile uint16_t*>(r.address()) = value;
 }
@@ -82,6 +87,7 @@ inline void write_w(uint16_t value) {
 template<uint32_t reg_serialized>
 inline void write_l(uint32_t value) {
   constexpr auto r = reg{reg_serialized};
+  static_assert(r.access() == Access::W);
   static_assert(r.width() == Width::L);
   *reinterpret_cast<volatile uint32_t*>(r.address()) = value;
 }
@@ -91,7 +97,6 @@ constexpr inline bool bit_test() {
   constexpr auto r = reg{reg_serialized};
 
   static_assert(bit >= 0);
-  static_assert(r.access() == Access::R);
   
   if constexpr(r.width() == Width::B) {
     static_assert(bit < 8);
@@ -109,6 +114,5 @@ constexpr inline bool bit_test() {
 
 auto foo() {
   constexpr auto r = reg{0xbeef, Width::B, Access::R};
-  write_b<r>(55);
   return bit_test<7, r>();
 }
