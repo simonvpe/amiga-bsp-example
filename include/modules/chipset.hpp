@@ -9,6 +9,7 @@ namespace Chipset {
   using cmap::make_map;
 
   enum class Register {
+    BSTDAT, DMACONR, VPOSR, VHPOSR,
     DSKDATR, JOY0DAT, JOY1DAT, CLXDAT, ADKCONR, POT0DAT, POT1DAT, POTINP, SERDATR, DSKBYTR,
     INTENAR, INTREQR, DSKPTH, DSKPTL, DSKLEN, DSKDAT, REFPTR, VPOSW, VHPOSW, COPCON, SERDAT,
     SERPER, POTGO, JOYTEST, STREQU, STRVBL, STRHOR, STRLONG, BLTCON0, BLTCON1, BLTAFWM,
@@ -32,6 +33,10 @@ namespace Chipset {
   };
 
   constexpr auto ocs = make_map(
+    map(Register::BSTDAT,  reg{0xDFF000, Width::W, Access::R}), // Blitter dest. early read (dummy address)	
+    map(Register::DMACONR, reg{0xDFF002, Width::W, Access::R}), // Dma control (and blitter status) read
+    map(Register::VPOSR,   reg{0xDFF004, Width::W, Access::R}), // Read vertical most sig. bits (and frame flop)
+    map(Register::VHPOSR,  reg{0xDFF006, Width::W, Access::R}), // Read vert and horiz position of beam				
     map(Register::DSKDATR, reg{0xDFF008, Width::W, Access::R}), // Disk data early read (dummy address)         
     map(Register::JOY0DAT, reg{0xDFF00A, Width::W, Access::R}), // Joystick-mouse 0 data (vert, horiz)          
     map(Register::JOY1DAT, reg{0xDFF00C, Width::W, Access::R}), // Joystick-mouse 1 data (vert, horiz)          

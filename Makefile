@@ -3,7 +3,8 @@ CXX      := $(DOCKER) m68k-ataribrowner-elf-g++ -Ttext=0
 LD       := $(DOCKER) m68k-ataribrowner-elf-ld
 OBJDUMP  := $(DOCKER) m68k-ataribrowner-elf-objdump
 HUNKTOOL := $(DOCKER) hunktool
-LDLAGS   :=--gc-sections --emit-relocs -e__start
+CXXFLAGS := -std=c++1z -Os
+LDLAGS   := --gc-sections --emit-relocs -e__start
 CPU      := -m68000
 LIBPATHS := -L/lib/gcc/m68k-ataribrown-elf/6.2.0/m68000 -L/usr/m68k-ataribrowner-elf/lib/m68000
 INC      := -Iinclude
@@ -15,7 +16,7 @@ build:
 	mkdir -p "$@"
 
 build/%.o: src/%.cpp build
-	$(CXX) $(CXXFLAGS) $(INC) $(CPU) -std=c++1z -O3 -c "$<" -o "$@"
+	$(CXX) $(CXXFLAGS) $(INC) $(CPU) -c "$<" -o "$@"
 
 build/elf: $(patsubst src/%.cpp,build/%.o,$(wildcard src/*.cpp))
 	$(LD) $(LDFLAGS) $(LIBPATHS) -static "$^" -o "$@" -T memory.ld
