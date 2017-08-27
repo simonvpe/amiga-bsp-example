@@ -10,7 +10,6 @@ using cmap::lookup;
 int main() {
   constexpr auto chipset_vposr    = bsp.chipset[Chipset::Register::VPOSR];  
   constexpr auto chipset_vhposr   = bsp.chipset[Chipset::Register::VHPOSR];
-  constexpr auto chipset_color00  = bsp.chipset[Chipset::Register::COLOR00];
 
   enum class Direction { Up, Down };
   

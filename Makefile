@@ -2,6 +2,7 @@ DOCKER   := docker run --user $(shell id -u) --rm -v $(CURDIR):/tmp -w /tmp brow
 CXX      := $(DOCKER) m68k-ataribrowner-elf-g++ -Ttext=0
 LD       := $(DOCKER) m68k-ataribrowner-elf-ld
 OBJDUMP  := $(DOCKER) m68k-ataribrowner-elf-objdump
+AS       := $(DOCKER) vasmm68k_mot
 HUNKTOOL := $(DOCKER) hunktool
 CXXFLAGS := -std=c++1z -Os
 LDLAGS   := --gc-sections --emit-relocs -e__start
@@ -12,14 +13,17 @@ INC      := -Iinclude
 
 all: build/hunk
 
-build:
+dirs:
 	mkdir -p "$@"
 
-build/%.o: src/%.cpp build
+build/%.s.o: src/%.s dirs
+	$(AS) $(ASFLAGS) "$<" -o "$@"
+
+build/%.o: src/%.cpp dirs
 	$(CXX) $(CXXFLAGS) $(INC) $(CPU) -c "$<" -o "$@"
 
-build/elf: $(patsubst src/%.cpp,build/%.o,$(wildcard src/*.cpp))
-	$(LD) $(LDFLAGS) $(LIBPATHS) -static "$^" -o "$@" -T memory.ld
+build/elf: $(patsubst src/%.cpp,build/%.o,$(wildcard src/*.cpp)) $(patsubst src/%.s,build/%.s.o,$(wildcard src/*.s))
+	$(LD) $(LDFLAGS) $(LIBPATHS) -static -o "$@" -T memory.ld $^
 
 build/hunk: build/elf
 	scripts/ploink "$<" "$@"
