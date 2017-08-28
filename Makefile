@@ -11,21 +11,21 @@ LIBPATHS := -L/lib/gcc/m68k-ataribrown-elf/6.2.0/m68000 -L/usr/m68k-ataribrowner
 INC      := -Iinclude
 
 
-all: build/hunk
+all: out/hunk
 
-dirs:
+out:
 	mkdir -p "$@"
 
-build/%.s.o: src/%.s dirs
+out/%.s.o: src/%.s out
 	$(AS) $(ASFLAGS) "$<" -o "$@"
 
-build/%.o: src/%.cpp dirs
+out/%.o: src/%.cpp out
 	$(CXX) $(CXXFLAGS) $(INC) $(CPU) -c "$<" -o "$@"
 
-build/elf: $(patsubst src/%.cpp,build/%.o,$(wildcard src/*.cpp)) $(patsubst src/%.s,build/%.s.o,$(wildcard src/*.s))
+out/elf: $(patsubst src/%.cpp,out/%.o,$(wildcard src/*.cpp)) $(patsubst src/%.s,out/%.s.o,$(wildcard src/*.s))
 	$(LD) $(LDFLAGS) $(LIBPATHS) -static -o "$@" -T memory.ld $^
 
-build/hunk: build/elf
+out/hunk: out/elf
 	scripts/ploink "$<" "$@"
 	$(OBJDUMP) -D "$<"
 	$(HUNKTOOL) info "$@" || true
