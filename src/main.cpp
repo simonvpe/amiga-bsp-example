@@ -2,6 +2,7 @@
 #include "drivers/mouse.hpp"
 #include "drivers/palette.hpp"
 #include "drivers/interrupt.hpp"
+#include "sprites.hpp"
 
 #include <tuple>
 #include <algorithm>
