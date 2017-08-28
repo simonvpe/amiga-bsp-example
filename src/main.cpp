@@ -29,20 +29,20 @@ constexpr inline void wait_not_raster(auto bsp, auto pos) {
     ;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
   
   uint8_t y = 0x40;
   Direction dir = Direction::Down;
 
   while(!mouse_clicked(bsp)) {
-    wait_raster(bsp, 0x2c);
-    set_color<Color::C00>(bsp, {0,0,0});
+    wait_raster(bsp, 0xff);
     std::tie(dir, y) = advance_bar(bsp, dir, y);
     wait_raster(bsp, y);
-    set_color<Color::C00>(bsp, {0,0,15});
+    set_color<Color::C00>(bsp, {15,15,15});
     wait_not_raster(bsp, y);
-    set_color<Color::C00>(bsp, {1,2,6});
+    set_color<Color::C00>(bsp, {1,1,6});
   }
-  return 0;
+  
+  return y;
 }
 	   
