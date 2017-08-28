@@ -29,10 +29,6 @@ constexpr inline void wait_not_raster(auto bsp, auto pos) {
 }
 
 int main() {
-  constexpr auto chipset_vposr    = bsp.chipset[Chipset::Register::VPOSR];  
-  constexpr auto chipset_vhposr   = bsp.chipset[Chipset::Register::VHPOSR];
-
-  
   
   uint8_t y = 0x40;
   Direction dir = Direction::Down;
