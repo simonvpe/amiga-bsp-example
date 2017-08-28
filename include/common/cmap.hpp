@@ -74,25 +74,6 @@ namespace _model {
           f5(5) -> {true, 15}
         ...
       -> {true, 15}
-
-    In order to easily chain together multiple subtrees there is a
-    utility function called `merge(node1, ...)` which takes all the
-    terminal nodes as arguments and automatically creates the branches. 
-
-    To reproduce the previous example using the merge function one could do 
-    the following.
-
-    Example: Construct the same tree using the `merge` function
-
-      const auto f5 = make_terminal(5,15);
-      const auto f4 = make_terminal(4,14);
-      const auto f2 = make_terminal(3,13);
-      const auto f1 = merge(f2,f4,f5);
-
-    Since the whole model is completely independent of the datatype stored
-    there is literally no limit to what you can store in the map, as long
-    as it is copy constructible. That means that you can nest maps and store
-    complex types.
   */
   template<typename V> struct outcome {
     constexpr outcome(bool s, const V v) : success{s}, value{v} {}
@@ -116,15 +97,6 @@ namespace _model {
       return right(key);
     };
   }
-
-  constexpr auto merge(const auto node) {
-    return node;
-  }
-
-  constexpr auto merge(const auto left, const auto ... rest) {
-    return make_branch(left, merge(rest...));
-  }
-
 }
 
 /*
@@ -136,17 +108,14 @@ namespace _model {
     constexpr auto fourty_four  = lookup(map, 14);
  */
 
-constexpr auto make_map(const auto ... rest) {
-  return _model::merge(rest...);
-}
+constexpr auto make_map(const auto node)
+{ return node; }
 
-constexpr auto map(const auto key, const auto value) {
-  return _model::make_terminal(key, value);
-}
+constexpr auto make_map(const auto left, const auto ... rest)
+{ return _model::make_branch(left, rest...); }
 
-constexpr auto join(const auto left_map, const auto right_map) {
-  return _model::merge(left_map, right_map);
-}
+constexpr auto map(const auto key, const auto value)
+{ return _model::make_terminal(key, value); }
 
 constexpr auto lookup(const auto tree, const auto key) {
   const auto result = tree(key);
@@ -164,13 +133,20 @@ constexpr auto lookup(const auto tree, const auto key) {
 
 template<typename TLookup>
 struct lookup_type {
-  constexpr lookup_type(const TLookup m) : map{m} {}
-  constexpr auto operator[](const auto key) const { return lookup(map, key); }
+  constexpr lookup_type(const TLookup m) 
+  : map{m} 
+  { }
+
+  constexpr auto operator[](const auto key) const 
+  { return lookup(map, key); }
+
   const TLookup map;
 };
 
-constexpr auto make_lookup(const auto ... rest) {
-  return lookup_type{make_map(rest...)};
-}
-  
+constexpr auto make_lookup(const lookup_type<auto> ... rest) 
+{ return lookup_type{make_map(rest.map...)}; }
+
+constexpr auto make_lookup(const auto ... rest) 
+{ return lookup_type{make_map(rest...)}; }
+
 } // namespace cmap
