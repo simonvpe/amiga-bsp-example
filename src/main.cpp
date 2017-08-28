@@ -1,6 +1,7 @@
 #include "a500.hpp"
 #include "drivers/mouse.hpp"
 #include "drivers/palette.hpp"
+#include "drivers/interrupt.hpp"
 
 using cmap::make_map;
 using cmap::map;
@@ -10,8 +11,9 @@ using cmap::lookup;
 int main() {
   constexpr auto chipset_vposr    = bsp.chipset[Chipset::Register::VPOSR];  
   constexpr auto chipset_vhposr   = bsp.chipset[Chipset::Register::VHPOSR];
-  constexpr auto chipset_color00  = bsp.chipset[Chipset::Register::COLOR00];
 
+  disable_interrupts(bsp);
+  
   enum class Direction { Up, Down };
   
   uint8_t y = 0x40;
