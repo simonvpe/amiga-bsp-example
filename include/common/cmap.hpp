@@ -76,7 +76,11 @@ namespace _model {
       -> {true, 15}
   */
   template<typename V> struct outcome {
-    constexpr outcome(bool s, const V v) : success{s}, value{v} {}
+    constexpr outcome(bool s, const V v) 
+    : success{s}
+    , value{v} 
+    { }
+    
     const bool success;
     const V value;
   };
