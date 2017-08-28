@@ -2,26 +2,30 @@ DOCKER   := docker run --user $(shell id -u) --rm -v $(CURDIR):/tmp -w /tmp brow
 CXX      := $(DOCKER) m68k-ataribrowner-elf-g++ -Ttext=0
 LD       := $(DOCKER) m68k-ataribrowner-elf-ld
 OBJDUMP  := $(DOCKER) m68k-ataribrowner-elf-objdump
+AS       := $(DOCKER) vasmm68k_mot
 HUNKTOOL := $(DOCKER) hunktool
 CXXFLAGS := -std=c++1z -Os
 LDLAGS   := --gc-sections --emit-relocs -e__start
 CPU      := -m68000
 LIBPATHS := -L/lib/gcc/m68k-ataribrown-elf/6.2.0/m68000 -L/usr/m68k-ataribrowner-elf/lib/m68000
-INC      := -Iinclude
+INC      := -Iinclude -Icmap/include
 
 
-all: build/hunk
+all: out/hunk
 
-build:
+out:
 	mkdir -p "$@"
 
-build/%.o: src/%.cpp build
+out/%.s.o: src/%.s out
+	$(AS) $(ASFLAGS) "$<" -o "$@"
+
+out/%.o: src/%.cpp out
 	$(CXX) $(CXXFLAGS) $(INC) $(CPU) -c "$<" -o "$@"
 
-build/elf: $(patsubst src/%.cpp,build/%.o,$(wildcard src/*.cpp))
-	$(LD) $(LDFLAGS) $(LIBPATHS) -static "$^" -o "$@" -T memory.ld
+out/elf: $(patsubst src/%.cpp,out/%.o,$(wildcard src/*.cpp)) $(patsubst src/%.s,out/%.s.o,$(wildcard src/*.s))
+	$(LD) $(LDFLAGS) $(LIBPATHS) -static -o "$@" -T memory.ld $^
 
-build/hunk: build/elf
+out/hunk: out/elf
 	scripts/ploink "$<" "$@"
 	$(OBJDUMP) -D "$<"
 	$(HUNKTOOL) info "$@" || true

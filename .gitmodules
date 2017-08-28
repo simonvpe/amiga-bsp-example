@@ -1,0 +1,3 @@
+[submodule "cmap"]
+	path = cmap
+	url = https://github.com/simonvpe/cmap

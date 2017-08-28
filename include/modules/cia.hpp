@@ -1,5 +1,5 @@
 #pragma once
-#include "common/cmap.hpp"
+#include "cmap.hpp"
 #include "common/utils.hpp"
 
 namespace CIA {
