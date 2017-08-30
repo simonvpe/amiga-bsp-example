@@ -96,7 +96,9 @@ void init_copperlist(
 }
 
 __attribute__((section(".startup_code"))) int main() {
-  // Shorthand for all registers we need
+  
+  // SHORTAND ALL THE REGISTERS NEEDED
+  
   constexpr auto INTENAR = bsp.chipset[Chipset::Register::INTENAR];
   constexpr auto INTENA  = bsp.chipset[Chipset::Register::INTENA];
   constexpr auto BPLCON0 = bsp.chipset[Chipset::Register::BPLCON0];
@@ -116,38 +118,34 @@ __attribute__((section(".startup_code"))) int main() {
   constexpr auto COPJMP1 = bsp.chipset[Chipset::Register::COPJMP1];
   constexpr auto DMACON  = bsp.chipset[Chipset::Register::DMACON];
   
-  // Store away and turn off interrupts
+  // STORE AWAY AND TURN OFF INTERRUPTS
+  
   const auto int_vector = read_w<INTENAR>();
   write_w<INTENA>(0x7fff);
 
+  // CONFIGURE DATA
+  
   // NOTE: This only works if there is only Chip RAM, the reason for
   // this is that the sprite data have to be in chip ram but if there
   // is slow ram the stack will be placed there. Not sure how to solve
   // this yet but for this demo it is ok.
   spaceship_sprite_t spaceship_sprite{};
-  dummy_sprite_t dummy_sprite{};
-  bitplane_t bitplane{};
+  dummy_sprite_t     dummy_sprite{};
+  bitplane_t         bitplane{};
   
   init_copperlist(&spaceship_sprite, &dummy_sprite, &bitplane);
   
   // SET UP FOR A SINGLE BITPLANE
   
-  // 1 bit-plane, color is on
-  write_w<BPLCON0>(0x1200);
-  // Modulo = 0
-  write_w<BPL1MOD>(0x0000);
-  // Horizontal scroll value = 0
-  write_w<BPLCON1>(0x0000);
-  // Sprites have priority over playfields
-  write_w<BPLCON2>(0x0024);
-  // Set data-fetch start
-  write_w<DDFSTRT>(0x0038);
-  // Set data-fetch stop
-  write_w<DDFSTOP>(0x00D0);
-  // Set display window start
-  write_w<DIWSTRT>(0x2C81);
-  // Set display window stop
-  write_w<DIWSTOP>(0xF4C1);
+  
+  write_w<BPLCON0>(0x1200); // 1 bit-plane, color is on
+  write_w<BPL1MOD>(0x0000); // Modulo = 0
+  write_w<BPLCON1>(0x0000); // Horizontal scroll value = 0
+  write_w<BPLCON2>(0x0024); // Sprites have priority over playfields
+  write_w<DDFSTRT>(0x0038); // Set data-fetch start
+  write_w<DDFSTOP>(0x00D0); // Set data-fetch stop
+  write_w<DIWSTRT>(0x2C81); // Set display window start
+  write_w<DIWSTOP>(0xF4C1); // Set display window stop
   
   // SET UP COLOR REGISTERS
   
@@ -157,12 +155,10 @@ __attribute__((section(".startup_code"))) int main() {
   write_w<COLOR18>(0x00FF);
   write_w<COLOR19>(0x0F0F);  
 
-  // POINT COPPER AT COPPER LIST
-  write_l<COP1LCH>(&copperlist);
-
-  // START DMA
-  read_w<COPJMP1>();
-  write_w<DMACON>(0x83A0);
+  // POINT COPPER AT COPPER LIST AND START DMA
+  write_l<COP1LCH>(&copperlist); // Point copper at copper list
+  read_w<COPJMP1>();             // Force start copper
+  write_w<DMACON>(0x83A0);       // Enable dma
 
   while(!mouse_clicked(bsp))
     ;
