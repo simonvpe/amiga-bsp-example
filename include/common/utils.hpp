@@ -52,7 +52,7 @@ struct reg {
 template<uint32_t reg_serialized>
 inline uint8_t read_b() { 
   constexpr auto r = reg{reg_serialized};
-  static_assert(r.access() == Access::R);
+  static_assert(r.access() == Access::R || r.access() == Access::S);
   static_assert(r.width() == Width::B || r.width() == Width::W || r.width() == Width::L);
   return *reinterpret_cast<volatile const uint8_t*>(r.address()); 
 }
@@ -60,7 +60,7 @@ inline uint8_t read_b() {
 template<uint32_t reg_serialized>
 inline uint16_t read_w() { 
   constexpr auto r = reg{reg_serialized};
-  static_assert(r.access() == Access::R);
+  static_assert(r.access() == Access::R || r.access() == Access::S);
   static_assert(r.width() == Width::W || r.width() == Width::L);
   return *reinterpret_cast<volatile const uint16_t*>(r.address());
 }
@@ -68,7 +68,7 @@ inline uint16_t read_w() {
 template<uint32_t reg_serialized>
 inline uint32_t read_l() {
   constexpr auto r = reg{reg_serialized};
-  static_assert(r.access() == Access::R);
+  static_assert(r.access() == Access::R || r.access() == Access::S);
   static_assert(r.width() == Width::L);
   return *reinterpret_cast<volatile const uint32_t*>(r.address());
 }

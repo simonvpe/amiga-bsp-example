@@ -6,8 +6,14 @@ MEMORY
 SECTIONS {
     .text : {
         __text_start = .;
+	KEEP(*(.startup_code*));
+	*(.startup_code*)
 	KEEP(*(.text));
         *(.text*)
+	/* .rodata is not moved by ploink script
+           so we are required to place it in .text */
+	KEEP(*(.rodata));
+	*(.rodata*)
         __text_end = .;
     } >CHIP_RAM
 

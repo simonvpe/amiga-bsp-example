@@ -49,7 +49,7 @@ namespace Chipset {
     map(Register::DSKBYTR, reg{0xDFF01A, Width::W, Access::R}), // Disk data byte and status read         
     map(Register::INTENAR, reg{0xDFF01C, Width::W, Access::R}), // Interrupt enable bits read           
     map(Register::INTREQR, reg{0xDFF01E, Width::W, Access::R}), // Interrupt request bits read           
-    map(Register::DSKPTH,  reg{0xDFF020, Width::W, Access::W}), // Disk pointer (high 5 bits, was 3 bits)       
+    map(Register::DSKPTH,  reg{0xDFF020, Width::L, Access::W}), // Disk pointer (high 5 bits, was 3 bits)       
     map(Register::DSKPTL,  reg{0xDFF022, Width::W, Access::W}), // Disk pointer (low 15 bits)          
     map(Register::DSKLEN,  reg{0xDFF024, Width::W, Access::W}), // Disk length             
     map(Register::DSKDAT,  reg{0xDFF026, Width::W, Access::W}), // Disk DMA data write           
@@ -69,13 +69,13 @@ namespace Chipset {
     map(Register::BLTCON1, reg{0xDFF042, Width::W, Access::W}), // Blitter control register 1           
     map(Register::BLTAFWM, reg{0xDFF044, Width::W, Access::W}), // Blitter first word mask for source A        
     map(Register::BLTALWM, reg{0xDFF046, Width::W, Access::W}), // Blitter last word mask for source A        
-    map(Register::BLTCPTH, reg{0xDFF048, Width::W, Access::W}), // Blitter pointer to source C (high 5 bits, was 3 bits)    
+    map(Register::BLTCPTH, reg{0xDFF048, Width::L, Access::W}), // Blitter pointer to source C (high 5 bits, was 3 bits)    
     map(Register::BLTCPTL, reg{0xDFF04A, Width::W, Access::W}), // Blitter pointer to source C (low 15 bits)       
-    map(Register::BLTBPTH, reg{0xDFF04C, Width::W, Access::W}), // Blitter pointer to source B (high 5 bits, was 3 bits)    
+    map(Register::BLTBPTH, reg{0xDFF04C, Width::L, Access::W}), // Blitter pointer to source B (high 5 bits, was 3 bits)    
     map(Register::BLTBPTL, reg{0xDFF04E, Width::W, Access::W}), // Blitter pointer to source B (low 15 bits)       
-    map(Register::BLTAPTH, reg{0xDFF050, Width::W, Access::W}), // Blitter pointer to source A (high 5 bits, was 3 bits)    
+    map(Register::BLTAPTH, reg{0xDFF050, Width::L, Access::W}), // Blitter pointer to source A (high 5 bits, was 3 bits)    
     map(Register::BLTAPTL, reg{0xDFF052, Width::W, Access::W}), // Blitter pointer to source A (low 15 bits)       
-    map(Register::BLTDPTH, reg{0xDFF054, Width::W, Access::W}), // Blitter pointer to dest D (high 5 bits, was 3 bits)    
+    map(Register::BLTDPTH, reg{0xDFF054, Width::L, Access::W}), // Blitter pointer to dest D (high 5 bits, was 3 bits)    
     map(Register::BLTDPTL, reg{0xDFF056, Width::W, Access::W}), // Blitter pointer to dest D (low 15 bits)       
     map(Register::BLTSIZE, reg{0xDFF058, Width::W, Access::W}), // Blitter start and size (win/width,height)          
     map(Register::BLTCMOD, reg{0xDFF060, Width::W, Access::W}), // Blitter modulo for source C          
@@ -86,9 +86,9 @@ namespace Chipset {
     map(Register::BLTBDAT, reg{0xDFF072, Width::W, Access::W}), // Blitter source B data register          
     map(Register::BLTADAT, reg{0xDFF074, Width::W, Access::W}), // Blitter source A data register          
     map(Register::DSKSYNC, reg{0xDFF07E, Width::W, Access::W}), // Disk sync pattern reg for disk read        
-    map(Register::COP1LCH, reg{0xDFF080, Width::W, Access::W}), // Coprocessor 1st location (high 5 bits,was 3 bits)       
+    map(Register::COP1LCH, reg{0xDFF080, Width::L, Access::W}), // Coprocessor 1st location (high 5 bits,was 3 bits)       
     map(Register::COP1LCL, reg{0xDFF082, Width::W, Access::W}), // Coprocessor 1st location (low 15 bits)         
-    map(Register::COP2LCH, reg{0xDFF084, Width::W, Access::W}), // Coprocessor 2nd location(high 5 bits,was 3 bits)        
+    map(Register::COP2LCH, reg{0xDFF084, Width::L, Access::W}), // Coprocessor 2nd location(high 5 bits,was 3 bits)        
     map(Register::COP2LCL, reg{0xDFF086, Width::W, Access::W}), // Coprocessor 2nd location (low 15 bits)         
     map(Register::COPJMP1, reg{0xDFF088, Width::W, Access::S}), // Coprocessor restart at 1st location          
     map(Register::COPJMP2, reg{0xDFF08A, Width::W, Access::S}), // Coprocessor restart at 2nd location          
@@ -102,41 +102,41 @@ namespace Chipset {
     map(Register::INTENA,  reg{0xDFF09A, Width::W, Access::W}), // Interrupt enable bits (clear or set bits)        
     map(Register::INTREQ,  reg{0xDFF09C, Width::W, Access::W}), // Interrupt request bits (clear or set bits)        
     map(Register::ADKCON,  reg{0xDFF09E, Width::W, Access::W}), // Audio,disk,UART control             
-    map(Register::AUD0LCH, reg{0xDFF0A0, Width::W, Access::W}), // Audio channel 0 location (high 5 bits was 3 bits)     
+    map(Register::AUD0LCH, reg{0xDFF0A0, Width::L, Access::W}), // Audio channel 0 location (high 5 bits was 3 bits)     
     map(Register::AUD0LCL, reg{0xDFF0A2, Width::W, Access::W}), // Audio channel 0 location (low 15 bits)        
     map(Register::AUD0LEN, reg{0xDFF0A4, Width::W, Access::W}), // Audio channel 0 length           
     map(Register::AUD0PER, reg{0xDFF0A6, Width::W, Access::W}), // Audio channel 0 period           
     map(Register::AUD0VOL, reg{0xDFF0A8, Width::W, Access::W}), // Audio channel 0 volume           
     map(Register::AUD0DAT, reg{0xDFF0AA, Width::W, Access::W}), // Audio channel 0 data           
-    map(Register::AUD1LCH, reg{0xDFF0B0, Width::W, Access::W}), // Audio channel 1 location (high 5 bits was 3 bits)     
+    map(Register::AUD1LCH, reg{0xDFF0B0, Width::L, Access::W}), // Audio channel 1 location (high 5 bits was 3 bits)     
     map(Register::AUD1LCL, reg{0xDFF0B2, Width::W, Access::W}), // Audio channel 1 location (low 15 bits)        
     map(Register::AUD1LEN, reg{0xDFF0B4, Width::W, Access::W}), // Audio channel 1 length           
     map(Register::AUD1PER, reg{0xDFF0B6, Width::W, Access::W}), // Audio channel 1 period           
     map(Register::AUD1VOL, reg{0xDFF0B8, Width::W, Access::W}), // Audio channel 1 volume           
     map(Register::AUD1DAT, reg{0xDFF0BA, Width::W, Access::W}), // Audio channel 1 data           
-    map(Register::AUD2LCH, reg{0xDFF0C0, Width::W, Access::W}), // Audio channel 2 location (high 5 bits was 3 bits)     
+    map(Register::AUD2LCH, reg{0xDFF0C0, Width::L, Access::W}), // Audio channel 2 location (high 5 bits was 3 bits)     
     map(Register::AUD2LCL, reg{0xDFF0C2, Width::W, Access::W}), // Audio channel 2 location (low 15 bits)        
     map(Register::AUD2LEN, reg{0xDFF0C4, Width::W, Access::W}), // Audio channel 2 length           
     map(Register::AUD2PER, reg{0xDFF0C6, Width::W, Access::W}), // Audio channel 2 period           
     map(Register::AUD2VOL, reg{0xDFF0C8, Width::W, Access::W}), // Audio channel 2 volume           
     map(Register::AUD2DAT, reg{0xDFF0CA, Width::W, Access::W}), // Audio channel 2 data           
-    map(Register::AUD3LCH, reg{0xDFF0D0, Width::W, Access::W}), // Audio channel 3 location (high 5 bits was 3 bits)     
+    map(Register::AUD3LCH, reg{0xDFF0D0, Width::L, Access::W}), // Audio channel 3 location (high 5 bits was 3 bits)     
     map(Register::AUD3LCL, reg{0xDFF0D2, Width::W, Access::W}), // Audio channel 3 location (low 15 bits)        
     map(Register::AUD3LEN, reg{0xDFF0D4, Width::W, Access::W}), // Audio channel 3 length           
     map(Register::AUD3PER, reg{0xDFF0D6, Width::W, Access::W}), // Audio channel 3 period           
     map(Register::AUD3VOL, reg{0xDFF0D8, Width::W, Access::W}), // Audio channel 3 volume           
     map(Register::AUD3DAT, reg{0xDFF0DA, Width::W, Access::W}), // Audio channel 3 data           
-    map(Register::BPL1PTH, reg{0xDFF0E0, Width::W, Access::W}), // Bitplane pointer 1 (high 5 bits was 3 bits)      
+    map(Register::BPL1PTH, reg{0xDFF0E0, Width::L, Access::W}), // Bitplane pointer 1 (high 5 bits was 3 bits)      
     map(Register::BPL1PTL, reg{0xDFF0E2, Width::W, Access::W}), // Bitplane pointer 1 (low 15 bits)         
-    map(Register::BPL2PTH, reg{0xDFF0E4, Width::W, Access::W}), // Bitplane pointer 2 (high 5 bits was 3 bits)      
+    map(Register::BPL2PTH, reg{0xDFF0E4, Width::L, Access::W}), // Bitplane pointer 2 (high 5 bits was 3 bits)      
     map(Register::BPL2PTL, reg{0xDFF0E6, Width::W, Access::W}), // Bitplane pointer 2 (low 15 bits)         
-    map(Register::BPL3PTH, reg{0xDFF0E8, Width::W, Access::W}), // Bitplane pointer 3 (high 5 bits was 3 bits)      
+    map(Register::BPL3PTH, reg{0xDFF0E8, Width::L, Access::W}), // Bitplane pointer 3 (high 5 bits was 3 bits)      
     map(Register::BPL3PTL, reg{0xDFF0EA, Width::W, Access::W}), // Bitplane pointer 3 (low 15 bits)         
-    map(Register::BPL4PTH, reg{0xDFF0EC, Width::W, Access::W}), // Bitplane pointer 4 (high 5 bits was 3 bits)      
+    map(Register::BPL4PTH, reg{0xDFF0EC, Width::L, Access::W}), // Bitplane pointer 4 (high 5 bits was 3 bits)      
     map(Register::BPL4PTL, reg{0xDFF0EE, Width::W, Access::W}), // Bitplane pointer 4 (low 15 bits)         
-    map(Register::BPL5PTH, reg{0xDFF0F0, Width::W, Access::W}), // Bitplane pointer 5 (high 5 bits was 3 bits)      
+    map(Register::BPL5PTH, reg{0xDFF0F0, Width::L, Access::W}), // Bitplane pointer 5 (high 5 bits was 3 bits)      
     map(Register::BPL5PTL, reg{0xDFF0F2, Width::W, Access::W}), // Bitplane pointer 5 (low 15 bits)         
-    map(Register::BPL6PTH, reg{0xDFF0F4, Width::W, Access::W}), // Bitplane pointer 6 (high 5 bits was 3 bits)      
+    map(Register::BPL6PTH, reg{0xDFF0F4, Width::L, Access::W}), // Bitplane pointer 6 (high 5 bits was 3 bits)      
     map(Register::BPL6PTL, reg{0xDFF0F6, Width::W, Access::W}), // Bitplane pointer 6 (low 15 bits)         
     map(Register::BPLCON0, reg{0xDFF100, Width::W, Access::W}), // Bitplane control (miscellaneous control bits)          
     map(Register::BPLCON1, reg{0xDFF102, Width::W, Access::W}), // Bitplane control (scroll value)           
@@ -150,21 +150,21 @@ namespace Chipset {
     map(Register::BPL4DAT, reg{0xDFF116, Width::W, Access::W}), // Bitplane 4 data (parallel to serial convert)        
     map(Register::BPL5DAT, reg{0xDFF118, Width::W, Access::W}), // Bitplane 5 data (parallel to serial convert)        
     map(Register::BPL6DAT, reg{0xDFF11A, Width::W, Access::W}), // Bitplane 6 data (parallel to serial convert)        
-    map(Register::SPR0PTH, reg{0xDFF120, Width::W, Access::W}), // Sprite 0 pointer (high 5 bits was 3 bits)      
+    map(Register::SPR0PTH, reg{0xDFF120, Width::L, Access::W}), // Sprite 0 pointer (high 5 bits was 3 bits)      
     map(Register::SPR0PTL, reg{0xDFF122, Width::W, Access::W}), // Sprite 0 pointer (low 15 bits)         
-    map(Register::SPR1PTH, reg{0xDFF124, Width::W, Access::W}), // Sprite 1 pointer (high 5 bits was 3 bits)      
+    map(Register::SPR1PTH, reg{0xDFF124, Width::L, Access::W}), // Sprite 1 pointer (high 5 bits was 3 bits)      
     map(Register::SPR1PTL, reg{0xDFF126, Width::W, Access::W}), // Sprite 1 pointer (low 15 bits)         
-    map(Register::SPR2PTH, reg{0xDFF128, Width::W, Access::W}), // Sprite 2 pointer (high 5 bits was 3 bits)      
+    map(Register::SPR2PTH, reg{0xDFF128, Width::L, Access::W}), // Sprite 2 pointer (high 5 bits was 3 bits)      
     map(Register::SPR2PTL, reg{0xDFF12A, Width::W, Access::W}), // Sprite 2 pointer (low 15 bits)         
-    map(Register::SPR3PTH, reg{0xDFF12C, Width::W, Access::W}), // Sprite 3 pointer (high 5 bits was 3 bits)      
+    map(Register::SPR3PTH, reg{0xDFF12C, Width::L, Access::W}), // Sprite 3 pointer (high 5 bits was 3 bits)      
     map(Register::SPR3PTL, reg{0xDFF12E, Width::W, Access::W}), // Sprite 3 pointer (low 15 bits)         
-    map(Register::SPR4PTH, reg{0xDFF130, Width::W, Access::W}), // Sprite 4 pointer (high 5 bits was 3 bits)      
+    map(Register::SPR4PTH, reg{0xDFF130, Width::L, Access::W}), // Sprite 4 pointer (high 5 bits was 3 bits)      
     map(Register::SPR4PTL, reg{0xDFF132, Width::W, Access::W}), // Sprite 4 pointer (low 15 bits)         
-    map(Register::SPR5PTH, reg{0xDFF134, Width::W, Access::W}), // Sprite 5 pointer (high 5 bits was 3 bits)      
+    map(Register::SPR5PTH, reg{0xDFF134, Width::L, Access::W}), // Sprite 5 pointer (high 5 bits was 3 bits)      
     map(Register::SPR5PTL, reg{0xDFF136, Width::W, Access::W}), // Sprite 5 pointer (low 15 bits)         
-    map(Register::SPR6PTH, reg{0xDFF138, Width::W, Access::W}), // Sprite 6 pointer (high 5 bits was 3 bits)      
+    map(Register::SPR6PTH, reg{0xDFF138, Width::L, Access::W}), // Sprite 6 pointer (high 5 bits was 3 bits)      
     map(Register::SPR6PTL, reg{0xDFF13A, Width::W, Access::W}), // Sprite 6 pointer (low 15 bits)         
-    map(Register::SPR7PTH, reg{0xDFF13C, Width::W, Access::W}), // Sprite 7 pointer (high 5 bits was 3 bits)      
+    map(Register::SPR7PTH, reg{0xDFF13C, Width::L, Access::W}), // Sprite 7 pointer (high 5 bits was 3 bits)      
     map(Register::SPR7PTL, reg{0xDFF13E, Width::W, Access::W}), // Sprite 7 pointer (low 15 bits)         
     map(Register::SPR0POS, reg{0xDFF140, Width::W, Access::W}), // Sprite 0 vert,horiz start pos data         
     map(Register::SPR0CTL, reg{0xDFF142, Width::W, Access::W}), // Sprite 0 position and control data         
