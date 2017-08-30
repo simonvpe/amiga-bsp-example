@@ -158,9 +158,7 @@ __attribute__((section(".startup_code"))) int main() {
   write_w<COLOR19>(0x0F0F);  
 
   // POINT COPPER AT COPPER LIST
-
-  const auto adr_copperlist = reinterpret_cast<uint32_t>(copperlist);
-  write_l<COP1LCH>(adr_copperlist);
+  write_l<COP1LCH>(&copperlist);
 
   // START DMA
   read_w<COPJMP1>();

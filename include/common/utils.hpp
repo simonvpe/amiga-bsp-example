@@ -97,6 +97,12 @@ inline void write_l(uint32_t value) {
   *reinterpret_cast<volatile uint32_t*>(r.address()) = value;
 }
 
+template<uint32_t reg_serialized>
+inline void write_l(const auto* value) {
+  const uint32_t addr = reinterpret_cast<uint32_t>(value);
+  write_l<reg_serialized>(addr);
+}
+
 template<int bit, uint32_t reg_serialized>
 constexpr inline bool bit_test() {
   constexpr auto r = reg{reg_serialized};
