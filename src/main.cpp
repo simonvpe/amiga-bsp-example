@@ -1,7 +1,36 @@
 #include "a500.hpp"
 #include "drivers/mouse.hpp"
+#include "copper.hpp"
 
 #include <array>
+
+constexpr auto BPL1PTH = bsp.chipset[Chipset::Register::BPL1PTH];
+constexpr auto SPR0PTH = bsp.chipset[Chipset::Register::SPR0PTH];
+constexpr auto SPR1PTH = bsp.chipset[Chipset::Register::SPR1PTH];
+constexpr auto SPR2PTH = bsp.chipset[Chipset::Register::SPR2PTH];
+constexpr auto SPR3PTH = bsp.chipset[Chipset::Register::SPR3PTH];
+constexpr auto SPR4PTH = bsp.chipset[Chipset::Register::SPR4PTH];
+constexpr auto SPR5PTH = bsp.chipset[Chipset::Register::SPR5PTH];
+constexpr auto SPR6PTH = bsp.chipset[Chipset::Register::SPR6PTH];
+constexpr auto SPR7PTH = bsp.chipset[Chipset::Register::SPR7PTH];
+constexpr auto INTENAR = bsp.chipset[Chipset::Register::INTENAR];
+constexpr auto INTENA  = bsp.chipset[Chipset::Register::INTENA];
+constexpr auto BPLCON0 = bsp.chipset[Chipset::Register::BPLCON0];
+constexpr auto BPLCON1 = bsp.chipset[Chipset::Register::BPLCON1];
+constexpr auto BPLCON2 = bsp.chipset[Chipset::Register::BPLCON2]; 
+constexpr auto BPL1MOD = bsp.chipset[Chipset::Register::BPL1MOD];
+constexpr auto DDFSTRT = bsp.chipset[Chipset::Register::DDFSTRT];
+constexpr auto DDFSTOP = bsp.chipset[Chipset::Register::DDFSTOP];  
+constexpr auto DIWSTRT = bsp.chipset[Chipset::Register::DIWSTRT];
+constexpr auto DIWSTOP = bsp.chipset[Chipset::Register::DIWSTOP];
+constexpr auto COLOR00 = bsp.chipset[Chipset::Register::COLOR00];
+constexpr auto COLOR01 = bsp.chipset[Chipset::Register::COLOR01];
+constexpr auto COLOR17 = bsp.chipset[Chipset::Register::COLOR17];
+constexpr auto COLOR18 = bsp.chipset[Chipset::Register::COLOR18];
+constexpr auto COLOR19 = bsp.chipset[Chipset::Register::COLOR19];
+constexpr auto COP1LCH = bsp.chipset[Chipset::Register::COP1LCH];
+constexpr auto COPJMP1 = bsp.chipset[Chipset::Register::COPJMP1];
+constexpr auto DMACON  = bsp.chipset[Chipset::Register::DMACON];
 
 struct spaceship_sprite_t {
   spaceship_sprite_t() {
@@ -42,81 +71,32 @@ struct bitplane_t {
   volatile uint32_t data[bytes/4];
 };
 
-static volatile uint16_t copperlist[38];
-
-void init_copperlist(
-    const volatile void* sprite,
-    const volatile void* dummy_sprite,
-    const volatile void* bitplane) {
-
-  const auto hi = [](const auto* ptr) -> uint16_t
-  { return reinterpret_cast<uint32_t>(ptr) >> 16; };
+struct copperlist_t {
+  copperlist_t(const bitplane_t& bpl, const spaceship_sprite_t& ss, const dummy_sprite_t& ds)
+    : i_move_bitplane{&bpl}
+    , i_move_sprite_0{&ss}
+    , i_move_sprite_1{&ds}
+    , i_move_sprite_2{&ds}
+    , i_move_sprite_3{&ds}
+    , i_move_sprite_4{&ds}
+    , i_move_sprite_5{&ds}
+    , i_move_sprite_6{&ds}
+    , i_move_sprite_7{&ds}
+  { }
   
-  const auto lo = [](const auto* ptr) -> uint16_t
-  { return reinterpret_cast<uint32_t>(ptr) & 0xFFFF; };
-
-  copperlist[0] = 0x00E0;
-  copperlist[1] = hi(bitplane);
-  copperlist[2] = 0x00E2;
-  copperlist[3] = lo(bitplane);
-  copperlist[4] = 0x0120;
-  copperlist[5] = hi(sprite);
-  copperlist[6] = 0x0122;
-  copperlist[7] = lo(sprite);
-  copperlist[8] = 0x0124;
-  copperlist[9] = hi(dummy_sprite);
-  copperlist[10] = 0x0126;
-  copperlist[11] = lo(dummy_sprite);
-  copperlist[12] = 0x0128;
-  copperlist[13] = hi(dummy_sprite);
-  copperlist[14] = 0x012A;
-  copperlist[15] = lo(dummy_sprite);
-  copperlist[16] = 0x012C;
-  copperlist[17] = hi(dummy_sprite);
-  copperlist[18] = 0x012E;
-  copperlist[19] = lo(dummy_sprite);
-  copperlist[20] = 0x0130;
-  copperlist[21] = hi(dummy_sprite);
-  copperlist[22] = 0x0132;
-  copperlist[23] = lo(dummy_sprite);
-  copperlist[24] = 0x0134;
-  copperlist[25] = hi(dummy_sprite);
-  copperlist[26] = 0x0136;
-  copperlist[27] = lo(dummy_sprite);
-  copperlist[28] = 0x0138;
-  copperlist[29] = hi(dummy_sprite);
-  copperlist[30] = 0x013A;
-  copperlist[31] = lo(dummy_sprite);
-  copperlist[32] = 0x013C;
-  copperlist[33] = hi(dummy_sprite);
-  copperlist[34] = 0x013E;
-  copperlist[35] = lo(dummy_sprite);
-  copperlist[36] = 0xFFFF;
-  copperlist[37] = 0xFFFE;
-}
+  volatile copper::move_l<BPL1PTH> i_move_bitplane;
+  volatile copper::move_l<SPR0PTH> i_move_sprite_0;
+  volatile copper::move_l<SPR1PTH> i_move_sprite_1;
+  volatile copper::move_l<SPR2PTH> i_move_sprite_2;
+  volatile copper::move_l<SPR3PTH> i_move_sprite_3;
+  volatile copper::move_l<SPR4PTH> i_move_sprite_4;
+  volatile copper::move_l<SPR5PTH> i_move_sprite_5;
+  volatile copper::move_l<SPR6PTH> i_move_sprite_6;
+  volatile copper::move_l<SPR7PTH> i_move_sprite_7;
+  volatile copper::exit            i_exit;
+};
 
 __attribute__((section(".startup_code"))) int main() {
-  
-  // SHORTAND ALL THE REGISTERS NEEDED
-  
-  constexpr auto INTENAR = bsp.chipset[Chipset::Register::INTENAR];
-  constexpr auto INTENA  = bsp.chipset[Chipset::Register::INTENA];
-  constexpr auto BPLCON0 = bsp.chipset[Chipset::Register::BPLCON0];
-  constexpr auto BPLCON1 = bsp.chipset[Chipset::Register::BPLCON1];
-  constexpr auto BPLCON2 = bsp.chipset[Chipset::Register::BPLCON2]; 
-  constexpr auto BPL1MOD = bsp.chipset[Chipset::Register::BPL1MOD];
-  constexpr auto DDFSTRT = bsp.chipset[Chipset::Register::DDFSTRT];
-  constexpr auto DDFSTOP = bsp.chipset[Chipset::Register::DDFSTOP];  
-  constexpr auto DIWSTRT = bsp.chipset[Chipset::Register::DIWSTRT];
-  constexpr auto DIWSTOP = bsp.chipset[Chipset::Register::DIWSTOP];
-  constexpr auto COLOR00 = bsp.chipset[Chipset::Register::COLOR00];
-  constexpr auto COLOR01 = bsp.chipset[Chipset::Register::COLOR01];
-  constexpr auto COLOR17 = bsp.chipset[Chipset::Register::COLOR17];
-  constexpr auto COLOR18 = bsp.chipset[Chipset::Register::COLOR18];
-  constexpr auto COLOR19 = bsp.chipset[Chipset::Register::COLOR19];
-  constexpr auto COP1LCH = bsp.chipset[Chipset::Register::COP1LCH];
-  constexpr auto COPJMP1 = bsp.chipset[Chipset::Register::COPJMP1];
-  constexpr auto DMACON  = bsp.chipset[Chipset::Register::DMACON];
   
   // STORE AWAY AND TURN OFF INTERRUPTS
   
@@ -132,11 +112,9 @@ __attribute__((section(".startup_code"))) int main() {
   spaceship_sprite_t spaceship_sprite{};
   dummy_sprite_t     dummy_sprite{};
   bitplane_t         bitplane{};
-  
-  init_copperlist(&spaceship_sprite, &dummy_sprite, &bitplane);
+  copperlist_t       copperlist{bitplane, spaceship_sprite, dummy_sprite};
   
   // SET UP FOR A SINGLE BITPLANE
-  
   
   write_w<BPLCON0>(0x1200); // 1 bit-plane, color is on
   write_w<BPL1MOD>(0x0000); // Modulo = 0
@@ -162,6 +140,8 @@ __attribute__((section(".startup_code"))) int main() {
 
   while(!mouse_clicked(bsp))
     ;
+
+  // RESTORE INTERRUPTS
   
   write_w<INTENA>(int_vector | 0x8000);
   return 0;

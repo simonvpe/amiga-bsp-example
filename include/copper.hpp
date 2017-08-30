@@ -1,40 +1,30 @@
 #include <inttypes.h>
 
-namespace Copper {
-
-using copper_instruction_type = uint32_t;
-
-struct reg { const uint16_t address; };
-
-struct mv {
-
-  constexpr mv(uint16_t address, uint16_t value)
-  : data{(address << 16) | value}
+namespace copper {
+  
+template<uint32_t reg_serialized>
+struct move_l {
+  constexpr static auto r = reg{reg_serialized};
+  static_assert(r.access() == Access::W);
+  static_assert(r.width() == Width::L);
+    
+  move_l(const volatile void* ptr)
+  : dst_hi(r.address() & 0x01FE)
+  , val_hi((reinterpret_cast<uint32_t>(ptr) >> 16) & 0xFFFF)
+  , dst_lo((dst_hi + 2) & 0x01FE)
+  , val_lo(reinterpret_cast<uint32_t>(ptr) & 0xFFFF)
   { }
-
-  constexpr mv(const reg& r, uint16_t value) 
-  : data{(r.address << 16) | value}
-  { }
-
-  constexpr operator uint32_t() const 
-  { return data; }
-
-  const copper_instruction_type data;
+    
+  uint16_t dst_hi;
+  uint16_t val_hi;
+  uint16_t dst_lo;
+  uint16_t val_lo;
 };
 
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
-static volatile copper_instruction_type copperlist[] = {
-  mv{reg{12},2},
-  mv{reg{15},9}
+struct exit {
+  exit() : value0{0xFFFF}, value1{0xFFFE} {}
+  uint16_t value0;
+  uint16_t value1;
 };
-#pragma GCC pop_options
-
-auto reg_copperlist(const volatile copper_instruction_type& cl) {
-  return cl;
+  
 }
-
-void foo() {
-  reg_copperlist(*copperlist);
-}
-};
