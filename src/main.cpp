@@ -14,6 +14,8 @@ constexpr auto SPR5PTH = bsp.chipset[Chipset::Register::SPR5PTH];
 constexpr auto SPR6PTH = bsp.chipset[Chipset::Register::SPR6PTH];
 constexpr auto SPR7PTH = bsp.chipset[Chipset::Register::SPR7PTH];
 constexpr auto INTENAR = bsp.chipset[Chipset::Register::INTENAR];
+constexpr auto INTREQR = bsp.chipset[Chipset::Register::INTREQR];
+constexpr auto INTREQ  = bsp.chipset[Chipset::Register::INTREQ];
 constexpr auto INTENA  = bsp.chipset[Chipset::Register::INTENA];
 constexpr auto BPLCON0 = bsp.chipset[Chipset::Register::BPLCON0];
 constexpr auto BPLCON1 = bsp.chipset[Chipset::Register::BPLCON1];
@@ -34,7 +36,7 @@ constexpr auto DMACON  = bsp.chipset[Chipset::Register::DMACON];
 
 struct spaceship_sprite_t {
   spaceship_sprite_t() {
-    data[0] = 0x6D40;
+    data[0] = 0x6D60;
     data[1] = 0x7200;
     data[2] = 0x0990;
     data[3] = 0x07E0;
@@ -50,6 +52,18 @@ struct spaceship_sprite_t {
     data[13] = 0;
   }
   volatile uint16_t data[14];
+};
+
+struct star_sprite_t {
+  star_sprite_t() {
+    data[0] = 0x6D40;
+    data[1] = 0x7200;
+    data[2] = 0xFFFF;
+    data[3] = 0xFFFF;
+    data[3] = 0;
+    data[4] = 0;
+  }
+  volatile uint16_t data[6];
 };
 
 struct dummy_sprite_t {
@@ -72,10 +86,13 @@ struct bitplane_t {
 };
 
 struct copperlist_t {
-  copperlist_t(const bitplane_t& bpl, const spaceship_sprite_t& ss, const dummy_sprite_t& ds)
+  copperlist_t(const bitplane_t& bpl,
+	       const spaceship_sprite_t& ss,
+	       const star_sprite_t& star,
+	       const dummy_sprite_t& ds)
     : i_move_bitplane{&bpl}
     , i_move_sprite_0{&ss}
-    , i_move_sprite_1{&ds}
+    , i_move_sprite_1{&star}
     , i_move_sprite_2{&ds}
     , i_move_sprite_3{&ds}
     , i_move_sprite_4{&ds}
@@ -96,12 +113,21 @@ struct copperlist_t {
   volatile copper::exit            i_exit;
 };
 
+extern "C" void interrupt_handler() {
+}
+
 __attribute__((section(".startup_code"))) int main() {
+
+  // INSTALL INTERRUPT HANDLERS
+  asm("movel #interrupt_handler,%a0\n\t"
+      :
+      : "r" (interrupt_handler));
   
   // STORE AWAY AND TURN OFF INTERRUPTS
   
   const auto int_vector = read_w<INTENAR>();
-  write_w<INTENA>(0x7fff);
+  write_w<INTENA>(0x7FDF);
+  write_w<INTENA>(0x8020);
 
   // CONFIGURE DATA
   
@@ -111,8 +137,9 @@ __attribute__((section(".startup_code"))) int main() {
   // this yet but for this demo it is ok.
   spaceship_sprite_t spaceship_sprite{};
   dummy_sprite_t     dummy_sprite{};
+  star_sprite_t      star_sprite{};
   bitplane_t         bitplane{};
-  copperlist_t       copperlist{bitplane, spaceship_sprite, dummy_sprite};
+  copperlist_t       copperlist{bitplane, spaceship_sprite, star_sprite, dummy_sprite};
   
   // SET UP FOR A SINGLE BITPLANE
   
@@ -127,8 +154,8 @@ __attribute__((section(".startup_code"))) int main() {
   
   // SET UP COLOR REGISTERS
   
-  write_w<COLOR00>(0x0808);
-  write_w<COLOR01>(0x0060);
+  write_w<COLOR00>(0x0000);
+  write_w<COLOR01>(0x0000);
   write_w<COLOR17>(0x0FF0);
   write_w<COLOR18>(0x00FF);
   write_w<COLOR19>(0x0F0F);  
@@ -139,7 +166,10 @@ __attribute__((section(".startup_code"))) int main() {
   write_w<DMACON>(0x83A0);       // Enable dma
 
   while(!mouse_clicked(bsp))
-    ;
+    if(read_w<INTREQR>() & 0x0020) {
+      write_w<INTREQ>(0x0020);
+      star_sprite.data[0] += 0x0001;
+    }
 
   // RESTORE INTERRUPTS
   
