@@ -54,16 +54,72 @@ struct spaceship_sprite_t {
   volatile uint16_t data[14];
 };
 
-struct star_sprite_t {
-  star_sprite_t() {
-    data[0] = 0x6D40;
-    data[1] = 0x7200;
-    data[2] = 0xFFFF;
-    data[3] = 0xFFFF;
-    data[3] = 0;
-    data[4] = 0;
+struct prng_t {
+  uint32_t state;
+  
+  prng_t()
+  : state{0x9876fedc}
+  { }
+
+  uint32_t next() {
+    state = state*0xffe + 0xdeadbeef;
+    return state;
   }
-  volatile uint16_t data[6];
+};
+
+template<int N>
+struct star_sprite_t {
+  static constexpr auto span = 0x20;
+
+  static constexpr uint8_t  speed[]   = {3,     1,     2,     1};
+  static constexpr uint16_t pixels0[] = {0x8000,0x8000,0x0000,0x8000};
+  static constexpr uint16_t pixels1[] = {0x8000,0x0000,0x8000,0x0000};
+  
+  struct sprite_t {
+    uint8_t y0;
+    uint8_t x0;
+    uint8_t y1;
+    uint8_t control;
+    uint16_t pixels[2];
+  };
+  
+  star_sprite_t() {
+    
+    uint8_t x0 = 0x40;
+    uint8_t y0 = 0x2C;
+    
+    for(auto& group : data) {
+      uint8_t i = 0;
+      x0 += 5;
+      for(auto& sprite : group) {
+	x0 = (x0 + rng.next());
+	y0 = (y0 + 3);
+	sprite.y0 = y0;
+	sprite.x0 = x0;
+	sprite.y1 = sprite.y0 + 1;
+	sprite.control = 0;
+	sprite.pixels[0] = pixels0[i];
+	sprite.pixels[1] = pixels1[i];
+	++i;
+      }
+    }
+    end_data[0] = 0;
+    end_data[1] = 0;
+  }
+  
+  void tick() {
+    for(auto& group : data) {
+      uint8_t i = 0;
+      for(auto& sprite : group) {
+	sprite.x0 += speed[i];
+	++i;
+      }
+    }
+  }
+  
+  std::array<std::array<sprite_t, 4>, N> data;
+  uint16_t end_data[2];
+  prng_t rng;
 };
 
 struct dummy_sprite_t {
@@ -85,10 +141,11 @@ struct bitplane_t {
   volatile uint32_t data[bytes/4];
 };
 
+template<int N>
 struct copperlist_t {
   copperlist_t(const bitplane_t& bpl,
 	       const spaceship_sprite_t& ss,
-	       const star_sprite_t& star,
+	       const star_sprite_t<N>& star,
 	       const dummy_sprite_t& ds)
     : i_move_bitplane{&bpl}
     , i_move_sprite_0{&ss}
@@ -137,7 +194,7 @@ __attribute__((section(".startup_code"))) int main() {
   // this yet but for this demo it is ok.
   spaceship_sprite_t spaceship_sprite{};
   dummy_sprite_t     dummy_sprite{};
-  star_sprite_t      star_sprite{};
+  star_sprite_t<20>  star_sprite{};
   bitplane_t         bitplane{};
   copperlist_t       copperlist{bitplane, spaceship_sprite, star_sprite, dummy_sprite};
   
@@ -156,9 +213,9 @@ __attribute__((section(".startup_code"))) int main() {
   
   write_w<COLOR00>(0x0000);
   write_w<COLOR01>(0x0000);
-  write_w<COLOR17>(0x0FF0);
-  write_w<COLOR18>(0x00FF);
-  write_w<COLOR19>(0x0F0F);  
+  write_w<COLOR17>(0x0444);
+  write_w<COLOR18>(0x0999);
+  write_w<COLOR19>(0x0FFF);  
 
   // POINT COPPER AT COPPER LIST AND START DMA
   write_l<COP1LCH>(&copperlist); // Point copper at copper list
@@ -168,7 +225,7 @@ __attribute__((section(".startup_code"))) int main() {
   while(!mouse_clicked(bsp))
     if(read_w<INTREQR>() & 0x0020) {
       write_w<INTREQ>(0x0020);
-      star_sprite.data[0] += 0x0001;
+      star_sprite.tick();
     }
 
   // RESTORE INTERRUPTS
