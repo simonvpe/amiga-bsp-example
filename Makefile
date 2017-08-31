@@ -9,7 +9,7 @@ CXXFLAGS := -std=c++1z -Os -mpcrel
 CFLAGS   := -Os -mpcrel
 LDFLAGS  := --gc-sections -static -T memory.ld -emain
 CPU      := -m68000
-LIBPATHS := -L/lib/gcc/m68k-ataribrown-elf/6.2.0/m68000 -L/usr/m68k-ataribrowner-elf/lib/m68000
+LIBPATHS := -L/usr/lib/gcc/m68k-ataribrowner-elf/7.1.0/m68000 -L/usr/m68k-ataribrowner-elf/lib/m68000
 INC      := -Iinclude -Icmap/include
 
 OBJECTS := $(patsubst src/%.cpp,out/%.o,$(wildcard src/*.cpp))
@@ -32,7 +32,7 @@ out/%.o: src/%.cpp out
 	$(CXX) $(CXXFLAGS) $(INC) $(CPU) -c "$<" -o "$@"
 
 out/elf: $(OBJECTS)
-	$(LD) $(LDFLAGS) $(LIBPATHS) -o "$@" $^
+	$(LD) $(LIBPATHS) $(LDFLAGS) -o "$@" $^
 
 
 out/hunk: out/elf
