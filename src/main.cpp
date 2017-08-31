@@ -2,6 +2,7 @@
 #include "drivers/mouse.hpp"
 #include "copper.hpp"
 #include "sprites/starfield.hpp"
+#include "sprites/dummy.hpp"
 
 #include <array>
 
@@ -53,16 +54,6 @@ struct spaceship_sprite_t {
     data[13] = 0;
   }
   volatile uint16_t data[14];
-};
-
-struct dummy_sprite_t {
-  dummy_sprite_t() {
-    data[0] = 0;
-    data[1] = 0;
-    data[2] = 0;
-    data[3] = 0;
-  }
-  volatile uint32_t data[4];
 };
 
 struct bitplane_t {
