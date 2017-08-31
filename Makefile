@@ -3,19 +3,23 @@ CXX      := $(DOCKER) m68k-ataribrowner-elf-g++ -Ttext=0
 CC       := $(DOCKER) m68k-ataribrowner-elf-gcc -Ttext=0
 LD       := $(DOCKER) m68k-ataribrowner-elf-ld
 OBJDUMP  := $(DOCKER) m68k-ataribrowner-elf-objdump
-AS       := $(DOCKER) vasmm68k_mot
+VAS      := $(DOCKER) vasmm68k_mot
+AS       := $(DOCKER) m68k-ataribrowner-elf-as
 HUNKTOOL := $(DOCKER) hunktool
 CXXFLAGS := -std=c++1z -Os -mpcrel
 CFLAGS   := -Os -mpcrel
-LDFLAGS  := --gc-sections -static -T memory.ld -emain
+VASFLAGS := -Felf -pic
+ASFLAGS  :=
+LDFLAGS  := --gc-sections -static -T memory.ld -eentry
 CPU      := -m68000
 LIBPATHS := -L/usr/lib/gcc/m68k-ataribrowner-elf/7.1.0/m68000 -L/usr/m68k-ataribrowner-elf/lib/m68000
 INC      := -Iinclude -Icmap/include
 
-OBJECTS := $(patsubst src/%.cpp,out/%.o,$(wildcard src/*.cpp))
-
-#$(patsubst src/%.s,out/%.s.o,$(wildcard src/*.s))
-#$(patsubst src/%.c,out/%.c.o,$(wildcard src/*.c))
+OBJECTS := \
+	$(patsubst src/%.cpp,out/%.o,$(wildcard src/*.cpp)) \
+	$(patsubst src/%.s,out/%.s.o,$(wildcard src/*.s))   \
+	$(patsubst src/%.S,out/%.S.o,$(wildcard src/*.S))   \
+	$(patsubst src/%.c,out/%.c.o,$(wildcard src/*.c))
 
 all: out/hunk
 
@@ -24,6 +28,9 @@ out:
 
 out/%.s.o: src/%.s out
 	$(AS) $(ASFLAGS) $(CPU) "$<" -o "$@"
+
+out/%.S.o: src/%.S out
+	$(VAS) $(VASFLAGS) $(CPU) "$<" -o "$@"
 
 out/%.c.o: src/%.c out
 	$(CC) $(CFLAGS) $(INC) $(CPU) -c "$<" -o "$@"

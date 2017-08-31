@@ -4,8 +4,7 @@
 #include "bitplane/bitplane.hpp"
 #include "sprites/starfield.hpp"
 #include "sprites/dummy.hpp"
-
-#include <array>
+#include "fonts/font.hpp"
 
 constexpr auto BPL1PTH = bsp.chipset[Chipset::Register::BPL1PTH];
 constexpr auto SPR0PTH = bsp.chipset[Chipset::Register::SPR0PTH];
@@ -86,17 +85,9 @@ struct copperlist_t {
   volatile copper::exit            i_exit;
 };
 
-extern "C" void interrupt_handler() {
-}
-
-__attribute__((section(".startup_code"))) int main() {
-
-  // INSTALL INTERRUPT HANDLERS
-  asm("movel #interrupt_handler,%a0\n\t"
-      :
-      : "r" (interrupt_handler));
+int main() {
   
-  // STORE AWAY AND TURN OFF INTERRUPTS
+  // // STORE AWAY AND TURN OFF INTERRUPTS
   
   const auto int_vector = read_w<INTENAR>();
   write_w<INTENA>(0x7FDF);
@@ -108,6 +99,7 @@ __attribute__((section(".startup_code"))) int main() {
   // this is that the sprite data have to be in chip ram but if there
   // is slow ram the stack will be placed there. Not sure how to solve
   // this yet but for this demo it is ok.
+  font_t                      font{};
   spaceship_sprite_t          spaceship_sprite{};
   dummy_sprite_t              dummy_sprite{};
   star_sprite_t<40,0x2C,0xF4> star_sprite{};
