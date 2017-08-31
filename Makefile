@@ -43,7 +43,7 @@ out/elf: $(OBJECTS)
 
 
 out/hunk: out/elf
-	$(OBJDUMP) -D "$<"
+	$(OBJDUMP) -d "$<"
 	scripts/ploink "$<" "$@"
 	$(HUNKTOOL) info "$@" || true
 

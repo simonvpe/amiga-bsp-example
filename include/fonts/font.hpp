@@ -1,7 +1,7 @@
 #pragma once
 
-extern const uint8_t* __font_start;
-extern const uint8_t* __font_end;
+extern volatile const uint8_t* __font_start;
+extern volatile const uint8_t* __font_end;
 
 struct font_t {
   font_t()

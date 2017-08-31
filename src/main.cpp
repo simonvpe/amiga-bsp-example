@@ -1,7 +1,6 @@
 #include "a500.hpp"
 #include "drivers/mouse.hpp"
 #include "copper.hpp"
-#include "bitplane/bitplane.hpp"
 #include "sprites/starfield.hpp"
 #include "sprites/dummy.hpp"
 #include "fonts/font.hpp"
@@ -58,11 +57,11 @@ struct spaceship_sprite_t {
 
 template<int N, int vstart, int vstop>
 struct copperlist_t {
-  copperlist_t(const bitplane_t& bpl,
+  copperlist_t(const void* bpl,
 	       const spaceship_sprite_t& ss,
 	       const star_sprite_t<N,vstart,vstop>& star,
 	       const dummy_sprite_t& ds)
-    : i_move_bitplane{&bpl}
+    : i_move_bitplane{bpl}
     , i_move_sprite_0{&ss}
     , i_move_sprite_1{&star}
     , i_move_sprite_2{&ds}
@@ -85,26 +84,38 @@ struct copperlist_t {
   volatile copper::exit            i_exit;
 };
 
+
 int main() {
   
   // // STORE AWAY AND TURN OFF INTERRUPTS
-  
+
   const auto int_vector = read_w<INTENAR>();
   write_w<INTENA>(0x7FDF);
   write_w<INTENA>(0x8020);
 
+  std::array<uint32_t, 2000> bitplane1;
+  for(auto i = 0 ; i < 2000 ; ++i) bitplane1[i] = ~0;
+  
   // CONFIGURE DATA
   
   // NOTE: This only works if there is only Chip RAM, the reason for
   // this is that the sprite data have to be in chip ram but if there
   // is slow ram the stack will be placed there. Not sure how to solve
   // this yet but for this demo it is ok.
-  font_t                      font{};
-  spaceship_sprite_t          spaceship_sprite{};
-  dummy_sprite_t              dummy_sprite{};
+  font_t font{};
+  
+  spaceship_sprite_t spaceship_sprite{};
+  
+  dummy_sprite_t dummy_sprite{};
+  
   star_sprite_t<40,0x2C,0xF4> star_sprite{};
-  bitplane_t                  bitplane{};
-  copperlist_t                copperlist{bitplane, spaceship_sprite, star_sprite, dummy_sprite};
+  
+  copperlist_t copperlist {
+    bitplane1.data(),
+    spaceship_sprite,
+    star_sprite,
+    dummy_sprite
+  };
   
   // SET UP FOR A SINGLE BITPLANE
   
@@ -119,7 +130,7 @@ int main() {
   
   // SET UP COLOR REGISTERS
   
-  write_w<COLOR00>(0x0000);
+  write_w<COLOR00>(0x000F);
   write_w<COLOR01>(0x0000);
   write_w<COLOR17>(0x0444);
   write_w<COLOR18>(0x0999);
