@@ -1,6 +1,7 @@
 #include "a500.hpp"
 #include "drivers/mouse.hpp"
 #include "copper.hpp"
+#include "bitplane/bitplane.hpp"
 #include "sprites/starfield.hpp"
 #include "sprites/dummy.hpp"
 
@@ -54,15 +55,6 @@ struct spaceship_sprite_t {
     data[13] = 0;
   }
   volatile uint16_t data[14];
-};
-
-struct bitplane_t {
-  static constexpr auto bytes = 8000U;
-  bitplane_t() {
-    for(auto i = 0 ; i < bytes/4 ; ++i)
-      data[i] = 0xFFFFFFFF;
-  }
-  volatile uint32_t data[bytes/4];
 };
 
 template<int N, int vstart, int vstop>
